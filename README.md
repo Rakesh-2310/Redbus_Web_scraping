@@ -19,3 +19,6 @@ This Streamlit application allows users to dynamically filter and visualize bus 
 **Run the Application**
 •	From the terminal, navigate to the directory containing the script and run: streamlit run <script_name>.py
 •	Replace <script_name> with the name of your Streamlit script file.
+
+## **Dataset type and structure:-**
+![image](https://github.com/user-attachments/assets/a1afaf5b-d6ee-410a-abf8-6655347fb68e)
