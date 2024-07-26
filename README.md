@@ -1,3 +1,21 @@
-# Redbus_Web_scraping
-Using Selenium to web scrape from Redbus web page on public data like routes, schedules, prices, and seat availability and then connect to mysql database to store data by pandas. Develop a streamlit to display and filter from scraped data. data stored in Mysql database
-SCREENSHOT FOR APPLICATION AND FILTER APPLIED - ![Screenshot (30)](https://github.com/user-attachments/assets/53817f75-4b1c-456a-884d-b06f09df6bf4)
+# **Redbus - Selenium web scrape and Streamlit Application**
+## Overview
+This Streamlit application allows users to dynamically filter and visualize bus route data. The data is fetched from a MySQL database containing information scraped from the Redbus website. The application features various filters including route, bus type, price range, star rating, and minimum seats available. Users can interactively refine their search criteria and view the results in a tabular format.
+## Features
+•	**Dynamic Filtering**: Filter bus routes based on route name, bus type, price range, star rating, and available seats.
+•	**Interactive Sliders**: Use sliders to specify price and rating ranges.
+•	**Dropdown Menus**: Select routes and bus types from dropdown menus.
+•	**Number Input**: Set minimum seats available using a numeric input field.
+•	**Real-time Data Fetching**: Update the displayed data based on the selected filters.
+## Prerequisites
+•	Python 3.7 or higher
+•	Streamlit
+•	Pandas
+•	PyMySQL
+•	A MySQL database with the Redbus_webscraped_data schema
+
+## Configuration
+**Database Connection**: Update the host, user, passwd, and database parameters in the pymysql.connect function call to match your MySQL setup
+**Run the Application**
+•	From the terminal, navigate to the directory containing the script and run: streamlit run <script_name>.py
+•	Replace <script_name> with the name of your Streamlit script file.
