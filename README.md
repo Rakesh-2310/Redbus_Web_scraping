@@ -41,3 +41,17 @@
 ## **Dataset type and structure:-**
 
 ![image](https://github.com/user-attachments/assets/a1afaf5b-d6ee-410a-abf8-6655347fb68e)
+
+**Flow Chart for web Scrapping and storing data:-**
+Start **----->** Initialize WebDriver **----->** Navigate to Redbus Website **----->** Get Government state List **----->** Iterate through Government state **----->** Check for Pagination **----->** If Pagination Exists Iterate Through Pages **----->** Get each route link **----->** Iterate through Link and Extract Bus Data **----->** Store Data in Dictionary **----->** Convert Data to Data Frame **----->** Create MySQL Database and Table **----->** Insert Data into Database using automation **----->** End
+
+**Flow Chart for data manipulation:-**
+Start **----->** Connect to Database **----->** Read Table Data **----->** Check and Process Data **----->** Delete Rows **----->** Update Columns **----->** Convert Time **----->** Alter Schema **----->** Add and Update Columns **----->** End
+
+**Flow Chart for Streamlit app:-**
+Start **----->** Initialize Database Connection **----->** Display Filters Sidebar **----->** Fetch Filtered Data **----->** Display Data Table **----->** Close Database Connection after fetch **----->** End
+
+Streamlit app:- 
+![image](https://github.com/user-attachments/assets/b135d38c-a6bf-4718-a06c-f956efc80d37)
+
+
