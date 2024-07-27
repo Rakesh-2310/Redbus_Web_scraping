@@ -1,57 +1,34 @@
 import streamlit as st
 import pandas as pd
 import pymysql
+from datetime import time
 
 # Establish a connection to the database
-connection = pymysql.connect(host='127.0.0.1', user='root', passwd='Krisrak@123', database='Redbus_webscraped_data')
+connection = pymysql.connect(
+    host='127.0.0.1', 
+    user='root', 
+    passwd='Krisrak@123', 
+    database='Redbus_webscraped_data'
+)
 
 # Function to get distinct column values from the database with filters
-def get_values(column_name, route=None, bustype=None, min_price=None, max_price=None, min_rating=None, max_rating=None, min_seats=None):
+def get_values(column_name, route=None, bustype=None):
     query = f"SELECT DISTINCT {column_name} AS value FROM Redbus_webscraped_data.bus_routes WHERE 1=1"
     if bustype:
         query += f" AND bustype = '{bustype}'"
     if route:
         query += f" AND route_name = '{route}'"
-    if min_price is not None:
-        query += f" AND price >= {min_price}"
-    if max_price is not None:
-        query += f" AND price <= {max_price}"
-    if min_rating is not None:
-        query += f" AND star_rating >= {min_rating}"
-    if max_rating is not None:
-        query += f" AND star_rating <= {max_rating}"
-    if min_seats is not None:
-        query += f" AND seats_available >= {min_seats}"
     column_values = pd.read_sql(query, connection)
     return column_values['value'].tolist()
 
-def get_min_value(column_name, route=None, bustype=None):
-    query = f"SELECT MIN({column_name}) AS value FROM Redbus_webscraped_data.bus_routes WHERE 1=1"
-    if route:
-        query += f" AND route_name = '{route}'"
-    if bustype:
-        query += f" AND bustype = '{bustype}'"
-    column_values = pd.read_sql(query, connection)
-    return column_values['value'][0] if not column_values.empty else None
-
-def get_max_value(column_name, route=None, bustype=None):
-    query = f"SELECT MAX({column_name}) AS value FROM Redbus_webscraped_data.bus_routes WHERE 1=1"
-    if route:
-        query += f" AND route_name = '{route}'"
-    if bustype:
-        query += f" AND bustype = '{bustype}'"
-    column_values = pd.read_sql(query, connection)
-    return column_values['value'][0] if not column_values.empty else None
-
 # Function to get data from the database
-def get_data(route=None, bustype=None, min_price=None, max_price=None, min_rating=None, max_rating=None, min_seats=None):
+def get_data(route=None, bustype=None, min_price=None, min_rating=None, max_rating=None, min_seats=None, dep_time=None, arr_time=None):
     query = """
     SELECT 
     route_Departure_name as Departure,
     route_Arrival_name as Arrival,
     busname as Busname,
     bustype as Bustype,
-    route_link as `Route Link`,
     departing_time as `Departing Time`,
     reaching_time as `Reaching Time`,
     duration as Duration,
@@ -66,64 +43,92 @@ def get_data(route=None, bustype=None, min_price=None, max_price=None, min_ratin
         query += f" AND route_name = '{route}'"
     if min_price is not None:
         query += f" AND price >= {min_price}"
-    if max_price is not None:
-        query += f" AND price <= {max_price}"
     if min_rating is not None:
         query += f" AND star_rating >= {min_rating}"
     if max_rating is not None:
         query += f" AND star_rating <= {max_rating}"
     if min_seats is not None:
         query += f" AND seats_available >= {min_seats}"
-    
+    if dep_time is not None:
+        query += f" AND TIME(departing_time) >= '{dep_time}'"
+    if arr_time is not None:
+        query += f" AND TIME(reaching_time) <= '{arr_time}'"
+
     df = pd.read_sql(query, connection)
     return df
 
 # Streamlit UI
 st.title("Bus Route Filter")
 
-# Fetch initial unique values for route
-route_name_values = get_values('route_name')
+# Sidebar for filters
+with st.sidebar:
+    st.header("Filters")
 
-# Dropdown for route
-route = st.selectbox("Route", options=['All'] + route_name_values)
-route = None if route == "All" else route
+    # Fetch initial unique values for route
+    route_name_values = get_values('route_name')
 
-# Update bustype dropdown based on selected route
-bustype_values = get_values('bustype', route=route)
-bustype = st.selectbox("Bus Type", options=['All'] + bustype_values)
-bustype = None if bustype == "All" else bustype
+    # Dropdown for route
+    if 'route' not in st.session_state:
+        st.session_state['route'] = 'All'
+    route = st.selectbox("Route", options=['All'] + route_name_values, key='route')
+    route = None if route == "All" else route
 
-# Number input for minimum seats available
-min_seats = st.number_input("Min Seats Available", min_value=0, value=0)
+    # Update bustype dropdown based on selected route
+    bustype_values = get_values('bustype', route=route)
+    if 'bustype' not in st.session_state:
+        st.session_state['bustype'] = 'All'
+    bustype = st.selectbox("Bus Type", options=['All'] + bustype_values, key='bustype')
+    bustype = None if bustype == "All" else bustype
 
-# Update min and max values for price and rating based on current filters
-price_min = get_min_value('price', route=route, bustype=bustype)
-price_max = get_max_value('price', route=route, bustype=bustype)
-rating_min = get_min_value('star_rating', route=route, bustype=bustype)
-rating_max = get_max_value('star_rating', route=route, bustype=bustype)
+    # Number input for minimum seats available
+    if 'min_seats' not in st.session_state:
+        st.session_state['min_seats'] = 0
+    min_seats = st.number_input("Min Seats Available", min_value=0, value=st.session_state['min_seats'], key='min_seats')
 
-# Handle cases where min_value is equal to max_value for sliders
-price_min = price_min if price_min is not None else 0
-price_max = price_max if price_max is not None else 1
-if price_min == price_max:
-    price_max += 1
+    # Input for minimum price
+    if 'min_price' not in st.session_state:
+        st.session_state['min_price'] = 0
+    min_price = st.number_input("Min Price", min_value=0, value=st.session_state['min_price'], key='min_price')
 
-rating_min = rating_min if rating_min is not None else 0
-rating_max = rating_max if rating_max is not None else 1
-if rating_min == rating_max:
-    rating_max += 0.1
+    # Slider for star rating
+    if 'star_rating' not in st.session_state:
+        st.session_state['star_rating'] = (0.0, 5.0)
+    star_rating = st.slider("Rating", min_value=0.0, max_value=5.0, value=st.session_state['star_rating'], step=0.1, key='star_rating')
+    min_rating, max_rating = star_rating
 
-# Sliders for price and rating
-price = st.slider("Price Range", min_value=float(price_min), max_value=float(price_max), value=(float(price_min), float(price_max)), step=1.0)
-star_rating = st.slider("Rating Range", min_value=float(rating_min), max_value=float(rating_max), value=(float(rating_min), float(rating_max)), step=0.1)
+    # Time input for departing time
+    if 'dep_time' not in st.session_state:
+        st.session_state['dep_time'] = time(0, 0)
+    dep_time = st.time_input("Departing Time After", value=st.session_state['dep_time'], key='dep_time')
 
-min_price, max_price = price
-min_rating, max_rating = star_rating
+    # Time input for reaching time
+    if 'arr_time' not in st.session_state:
+        st.session_state['arr_time'] = time(23, 59)
+    arr_time = st.time_input("Reaching Time Before", value=st.session_state['arr_time'], key='arr_time')
 
-# Button to fetch data
-if st.button("Fetch Data"):
-    data = get_data(route, bustype, min_price, max_price, min_rating, max_rating, min_seats)
-    st.dataframe(data)
+    # Reset button
+    if st.button("Reset Filters"):
+        route = None
+        bustype = None
+        min_seats = 0
+        min_price = 0
+        min_rating = 0.0
+        max_rating = 5.0
+        dep_time = time(0, 0)
+        arr_time = time(23, 59)
+
+# Main area for displaying data
+data = get_data(
+    route, 
+    bustype, 
+    min_price, 
+    min_rating, 
+    max_rating, 
+    min_seats, 
+    dep_time, 
+    arr_time
+)
+st.dataframe(data)
 
 # Closing the database connection after the application has finished fetching data
 connection.close()
